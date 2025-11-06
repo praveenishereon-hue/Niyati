@@ -15,16 +15,47 @@
   <h3 id="response" style="margin-top: 30px; color: purple;"></h3>
 
   <script>
-    async function sendMessage() {
-      const input = document.getElementById("userInput").value;
-      document.getElementById("response").innerText = "🔮 Thinking...";
+  async function sendMessage() {
+    const box = document.getElementById("userInput");
+    const out = document.getElementById("response");
+    const q = box.value.trim();
+    if (!q) { out.innerText = "कृपया अपना सवाल लिखें."; return; }
 
-      // Dummy reply (AI reply yahan later add hoga)
-      setTimeout(() => {
-        document.getElementById("response").innerText = 
-          "✨ According to Niyati, your stars indicate positive change soon!";
-      }, 1500);
+    out.innerText = "🔮 Niyati सोच रही है...";
+
+    try {
+      const resp = await fetch("https://api-inference.huggingface.co/models/google/gemma-2b-it", {
+        method: "POST",
+        headers: {
+          "Authorization": "Bearer " + "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",
+          "Content-Type": "application/json"
+        },
+        body: JSON.stringify({
+          inputs:
+`आप एक अनुभवी भारतीय वैदिक ज्योतिषी हैं।
+सिर्फ़ *हिंदी* में उत्तर दें; एक भी अंग्रेज़ी शब्द न लिखें।
+टोन: गर्मजोशी, स्पष्ट, 3–5 लाइनों में संक्षेप।
+फॉर्मेट:
+- सार: ...
+- अगले 24 घंटे: ...
+- सलाह: ...
+
+प्रश्न: ${q}
+उत्तर:`.replace(/\\/g,"")
+        })
+      });
+
+      if (!resp.ok) { out.innerText = "⚠️ सर्वर से जवाब नहीं मिला."; return; }
+
+      const data = await resp.json();
+      let text = (Array.isArray(data) ? data[0]?.generated_text : data?.generated_text) || "";
+      // कभी-कभी मॉडल prompt भी दोहरा देता है—तो "उत्तर:" के बाद वाला हिस्सा लें
+      const cut = text.split("उत्तर:").pop().trim();
+      out.innerText = "✨ " + (cut || text);
+    } catch (e) {
+      out.innerText = "⚠️ नेटवर्क त्रुटि: " + e.message;
     }
-  </script>
+  }
+</script>
 </body>
 </html>
