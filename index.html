@@ -23,50 +23,40 @@
   <div id="response" class="bubble"></div>
 
   <script>
-    async function sendMessage() {
-      const q = document.getElementById('userInput').value.trim();
-      const out = document.getElementById('response');
-      if (!q) { out.textContent = 'कृपया पहले अपना प्रश्न लिखें.'; return; }
-      out.textContent = '🔮 Niyati सोच रही है...';
+  async function sendMessage() {
+    const q = document.getElementById('userInput').value.trim();
+    const out = document.getElementById('response');
 
-      try {
-        const response = await fetch("https://niyati-api.vercel.app/api/niyati", {
-          method: 'POST',
-          headers: {
-            'Content-Type': 'application/json'
-          },
-          body: JSON.stringify({
-            inputs:
-`आप एक अनुभवी भारतीय वैदिक ज्योतिषी हैं।
-केवल *हिंदी* में उत्तर दें (अंग्रेज़ी शब्द न लिखें)।
-उत्तर 3–5 छोटी पंक्तियों में दें।
-फॉर्मेट:
-- सार:
-- अगले 24 घंटे:
-- सलाह:
-
-प्रश्न: ${q}
-उत्तर:`.replace(/\\/g,''),
-            parameters: { max_new_tokens: 180, temperature: 0.7 }
-          })
-        });
-
-        if (!resp.ok) { out.textContent = '⚠️ सर्वर से जवाब नहीं मिला. बाद में पुनः प्रयास करें.'; return; }
-
-        const data = await resp.json();
-        let text = (Array.isArray(data) ? data[0]?.generated_text : data?.generated_text) || '';
-
-        // Prompt dobara aa jaye to "उत्तर:" ke baad ka हिस्सा लो
-        if (text.includes('उत्तर:')) text = text.split('उत्तर:').pop().trim();
-
-        // Safety: agar fir bhi English aa jaye to simple Hindi tag laga दो
-        if (!/[अ-हऺ-ॿ]/.test(text)) text = '• आज धैर्य रखें। • छोटे काम पूरे होंगे। • किसी वरिष्ठ का मार्गदर्शन लाभ देगा।';
-
-        out.textContent = '✨ ' + text;
-      } catch (e) {
-        out.textContent = '⚠️ नेटवर्क त्रुटि: ' + e.message;
-      }
+    if (!q) {
+      out.textContent = "कृपया पहले अपना प्रश्न लिखें।";
+      return;
     }
-  </script>
+
+    out.textContent = "🔮 Niyati सोच रही है...";
+
+    try {
+      const r = await fetch("https://niyati-api.vercel.app/api/niyati", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json"
+        },
+        body: JSON.stringify({ prompt: q })
+      });
+
+      const data = await r.json();
+
+      if (data.text) {
+        out.textContent = "✨ " + data.text;
+      } else if (data.error) {
+        out.textContent = "⚠️ त्रुटि: " + data.error;
+      } else {
+        out.textContent = "😕 कोई उत्तर नहीं मिला।";
+      }
+
+    } catch (err) {
+      out.textContent = "⚠️ नेटवर्क समस्या: " + err.message;
+    }
+  }
+</script>
 </body>
 </html>
