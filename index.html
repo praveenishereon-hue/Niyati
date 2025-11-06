@@ -1,0 +1,30 @@
+<!DOCTYPE html>
+<html lang="hi">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Niyati - AI Astrology Chatbot</title>
+</head>
+<body style="font-family: Arial; text-align: center; margin-top: 50px;">
+  <h1>🔮 Niyati - Your AI Astrology Guide</h1>
+  <p>Type your question below and get instant astrological insights.</p>
+
+  <textarea id="userInput" rows="4" cols="50" placeholder="Ask about your future..."></textarea><br><br>
+  <button onclick="sendMessage()">Ask Niyati</button>
+
+  <h3 id="response" style="margin-top: 30px; color: purple;"></h3>
+
+  <script>
+    async function sendMessage() {
+      const input = document.getElementById("userInput").value;
+      document.getElementById("response").innerText = "🔮 Thinking...";
+
+      // Dummy reply (AI reply yahan later add hoga)
+      setTimeout(() => {
+        document.getElementById("response").innerText = 
+          "✨ According to Niyati, your stars indicate positive change soon!";
+      }, 1500);
+    }
+  </script>
+</body>
+</html>
