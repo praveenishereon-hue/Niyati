@@ -1,61 +1,73 @@
 <!DOCTYPE html>
 <html lang="hi">
 <head>
-  <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Niyati - AI Astrology Chatbot</title>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Niyati – AI Astrology Chatbot</title>
+  <style>
+    body{font-family:system-ui,Arial;max-width:720px;margin:40px auto;padding:16px}
+    h1{margin:0 0 8px 0}
+    textarea{width:100%;padding:10px;border:1px solid #ddd;border-radius:8px}
+    button{margin-top:10px;padding:10px 14px;border:0;border-radius:8px;cursor:pointer}
+    .primary{background:#6b46c1;color:#fff}
+    .bubble{white-space:pre-wrap;margin-top:16px;border:1px solid #eee;padding:12px;border-radius:10px}
+  </style>
 </head>
-<body style="font-family: Arial; text-align: center; margin-top: 50px;">
-  <h1>🔮 Niyati - Your AI Astrology Guide</h1>
-  <p>Type your question below and get instant astrological insights.</p>
+<body>
+  <h1>🔮 Niyati – Your AI Astrology Guide</h1>
+  <p>नीचे अपना सवाल लिखिए और <b>सिर्फ़ हिंदी</b> में संक्षिप्त भविष्यवाणी पाएँ।</p>
 
-  <textarea id="userInput" rows="4" cols="50" placeholder="Ask about your future..."></textarea><br><br>
-  <button onclick="sendMessage()">Ask Niyati</button>
+  <textarea id="userInput" rows="4" placeholder="उदाहरण: मेरा आज का दिन कैसा रहेगा?"></textarea>
+  <button class="primary" onclick="sendMessage()">Ask Niyati</button>
 
-  <h3 id="response" style="margin-top: 30px; color: purple;"></h3>
+  <div id="response" class="bubble"></div>
 
   <script>
-  async function sendMessage() {
-    const box = document.getElementById("userInput");
-    const out = document.getElementById("response");
-    const q = box.value.trim();
-    if (!q) { out.innerText = "कृपया अपना सवाल लिखें."; return; }
+    async function sendMessage() {
+      const q = document.getElementById('userInput').value.trim();
+      const out = document.getElementById('response');
+      if (!q) { out.textContent = 'कृपया पहले अपना प्रश्न लिखें.'; return; }
+      out.textContent = '🔮 Niyati सोच रही है...';
 
-    out.innerText = "🔮 Niyati सोच रही है...";
-
-    try {
-      const resp = await fetch("https://api-inference.huggingface.co/models/google/gemma-2b-it", {
-        method: "POST",
-        headers: {
-          "Authorization": "Bearer " + "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",
-          "Content-Type": "application/json"
-        },
-        body: JSON.stringify({
-          inputs:
+      try {
+        const resp = await fetch('https://api-inference.huggingface.co/models/google/gemma-2b-it', {
+          method: 'POST',
+          headers: {
+            'Authorization': 'Bearer ' + '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',
+            'Content-Type': 'application/json'
+          },
+          body: JSON.stringify({
+            inputs:
 `आप एक अनुभवी भारतीय वैदिक ज्योतिषी हैं।
-सिर्फ़ *हिंदी* में उत्तर दें; एक भी अंग्रेज़ी शब्द न लिखें।
-टोन: गर्मजोशी, स्पष्ट, 3–5 लाइनों में संक्षेप।
+केवल *हिंदी* में उत्तर दें (अंग्रेज़ी शब्द न लिखें)।
+उत्तर 3–5 छोटी पंक्तियों में दें।
 फॉर्मेट:
-- सार: ...
-- अगले 24 घंटे: ...
-- सलाह: ...
+- सार:
+- अगले 24 घंटे:
+- सलाह:
 
 प्रश्न: ${q}
-उत्तर:`.replace(/\\/g,"")
-        })
-      });
+उत्तर:`.replace(/\\/g,''),
+            parameters: { max_new_tokens: 180, temperature: 0.7 }
+          })
+        });
 
-      if (!resp.ok) { out.innerText = "⚠️ सर्वर से जवाब नहीं मिला."; return; }
+        if (!resp.ok) { out.textContent = '⚠️ सर्वर से जवाब नहीं मिला. बाद में पुनः प्रयास करें.'; return; }
 
-      const data = await resp.json();
-      let text = (Array.isArray(data) ? data[0]?.generated_text : data?.generated_text) || "";
-      // कभी-कभी मॉडल prompt भी दोहरा देता है—तो "उत्तर:" के बाद वाला हिस्सा लें
-      const cut = text.split("उत्तर:").pop().trim();
-      out.innerText = "✨ " + (cut || text);
-    } catch (e) {
-      out.innerText = "⚠️ नेटवर्क त्रुटि: " + e.message;
+        const data = await resp.json();
+        let text = (Array.isArray(data) ? data[0]?.generated_text : data?.generated_text) || '';
+
+        // Prompt dobara aa jaye to "उत्तर:" ke baad ka हिस्सा लो
+        if (text.includes('उत्तर:')) text = text.split('उत्तर:').pop().trim();
+
+        // Safety: agar fir bhi English aa jaye to simple Hindi tag laga दो
+        if (!/[अ-हऺ-ॿ]/.test(text)) text = '• आज धैर्य रखें। • छोटे काम पूरे होंगे। • किसी वरिष्ठ का मार्गदर्शन लाभ देगा।';
+
+        out.textContent = '✨ ' + text;
+      } catch (e) {
+        out.textContent = '⚠️ नेटवर्क त्रुटि: ' + e.message;
+      }
     }
-  }
-</script>
+  </script>
 </body>
 </html>
